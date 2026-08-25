@@ -1,0 +1,40 @@
+# =============================================================================
+# GEREKSİZ VE GEÇİCİ DOSYALAR (GITIGNORE)
+# =============================================================================
+
+# 1. Sanal Ortam (Virtual Environment)
+.venv/
+venv/
+env/
+ENV/
+
+# 2. Python Önbellek ve Derleme Dosyaları
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# 3. Model Eğitim Logları ve Çalışma Çıktıları
+runs/
+*.log
+
+# 4. Ham Görüntü Veri Seti (Repoyu şişirmemesi için)
+datasets/
+
+# 5. Kişisel Staj Defteri Belgeleri ve Taslaklar (Hocanın GitHub'da görmesine gerek olmayanlar)
+*.docx
+*.doc
+*.pdf
+HANDOFF.md
+
+# 6. İşletim Sistemi ve Editör Geçici Dosyaları
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# 7. SQLite Geçici Günlük Dosyaları
+*.db-journal
