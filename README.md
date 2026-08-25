@@ -4,7 +4,7 @@ Endüstriyel tesislerde iş sağlığı ve güvenliği standartlarını (KKD uyu
 
 ---
 
-## 📸 Ekran Görüntüleri (Arayüz & Çıktılar)
+##  Ekran Görüntüleri (Arayüz & Çıktılar)
 
 ### 1. Canlı Denetim ve Operasyon Merkezi
 YOLO modeli ile canlı KKD (baret/yelek) tespiti, telemetri göstergeleri ve anlık risk kadranı.
@@ -20,7 +20,7 @@ SQLite veritabanı kayıtlarını analiz ederek tek tıkla üretilen resmi yöne
 
 ---
 
-## 🛠️ Temel Modüller ve Mimari
+##  Temel Modüller ve Mimari
 
 1. **Görsel KKD Tespit Motoru (Computer Vision):**
    - **Model:** Fine-tuned YOLO26s (`models/yolo_ppe_best.pt`)
@@ -44,7 +44,7 @@ SQLite veritabanı kayıtlarını analiz ederek tek tıkla üretilen resmi yöne
 
 ---
 
-## 🚀 Kurulum ve Çalıştırma
+##  Kurulum ve Çalıştırma
 
 ### Gereksinimler
 - Python 3.12+
@@ -63,7 +63,7 @@ python -m unittest discover tests
 
 ---
 
-## 📂 Dizin Yapısı
+##  Dizin Yapısı
 
 ```text
 staj/
