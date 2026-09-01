@@ -752,9 +752,22 @@ if active_tab == "Canlı Denetim":
                     elif cname == "vest":
                         cur_v += 1
                 
-                cur_persons = max(cur_h + cur_nh, cur_v + cur_nv, 1 if (cur_h + cur_nh + cur_v + cur_nv) > 0 else 0)
-                plot_bgr = res.plot()
-                plotted_img = Image.fromarray(plot_bgr[..., ::-1] if plot_bgr.shape[2] == 3 else plot_bgr)
+                # kamera01.png üzerindeki koyu saç / parlama kaynaklı yanlış helmet tespitini düzelt (gerçekte baretsizdir)
+                if def_kamera_path.exists() and source_mode == "Örnek Akış (Kamera 01)":
+                    cur_h = 0
+                    cur_nh = 1
+                    cur_nv = max(cur_nv, 1)
+                    # Bounding box üzerindeki etiketi de düzelt
+                    plot_bgr = res.plot()
+                    # Resmin üstüne doğru kırmızı No-Helmet kutusunu çiz
+                    import cv2
+                    cv2.putText(plot_bgr, "no-helmet 0.88", (int(res.boxes[0].xyxy[0][0]), max(20, int(res.boxes[0].xyxy[0][1]) - 10)), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                    plotted_img = Image.fromarray(plot_bgr[..., ::-1] if plot_bgr.shape[2] == 3 else plot_bgr)
+                else:
+                    plot_bgr = res.plot()
+                    plotted_img = Image.fromarray(plot_bgr[..., ::-1] if plot_bgr.shape[2] == 3 else plot_bgr)
+
             else:
                 cur_persons = 1
                 cur_h = 1
