@@ -712,11 +712,16 @@ if active_tab == "Canlı Denetim":
             if up_file:
                 input_image = Image.open(up_file).convert("RGB")
         elif source_mode == "Örnek Akış (Kamera 01)":
-            test_img_path = ROOT_DIR / "datasets" / "ppe_dataset" / "test" / "images"
-            if test_img_path.exists():
-                imgs = sorted(list(test_img_path.glob("*.jpg")) + list(test_img_path.glob("*.png")))
-                if imgs:
-                    input_image = Image.open(imgs[0]).convert("RGB")
+            def_kamera_path = ROOT_DIR / "kamera01.png"
+            if def_kamera_path.exists():
+                input_image = Image.open(def_kamera_path).convert("RGB")
+            else:
+                test_img_path = ROOT_DIR / "datasets" / "ppe_dataset" / "test" / "images"
+                if test_img_path.exists():
+                    imgs = sorted(list(test_img_path.glob("*.jpg")) + list(test_img_path.glob("*.png")))
+                    if imgs:
+                        input_image = Image.open(imgs[0]).convert("RGB")
+
 
         # Computer Vision Inference Pipeline
         cur_nh = 0

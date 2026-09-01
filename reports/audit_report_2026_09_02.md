@@ -1,11 +1,11 @@
 # İSG Günlük Yönetici Denetim Raporu (2026_09_02)
 
 1. Paragraf:
-Genel tesis risk durumu orta düzeyde bulunuyor ve genel ihlal istatistiklerimizde baret ilek sayısı 28, yelek ilek sayısı ise 40'dur.
+Genel olarak, tesislerde toplamda 76 baret ve yelek ihlali mevcut. Ortalama risk skoru 5.25 olarak belirlenmiştir. Tesis genel risk durumu orta düzeydedir.
 
 2. Paragraf:
-Ortalama risk skoru 5.29, bu skorun İSG standartlarına göre orta düzeyi temsil eder ve tesislerin güvenliğini artırmak için daha fazla dikkat ve önlemler gereklidir.
+Risk skoru ortalama 5.25, İSG standartları açısından "Orta" risk seviyesine denk gelmektedir. Bu durum tesislerin güvenliğini ve iş sahibinin sorumluluğunu daha da vurgulamaktadır.
 
 Aksiyon Planı:
-1. KKD denetim sıklığının artırılması.
-2. Sahada farkındalık eğitimi verilmesi.
+1. KKD (Kontrol Kullanım Denetim) sıklığının artırılması, genel ihlal oranını düşürmek için bir yol olacaktır.
+2. Sahada çalışanların yelek ve baret kullanımı hakkında farkındalık eğitimi verilmeli, böylece ihlallerin önüne geçilebilir.
