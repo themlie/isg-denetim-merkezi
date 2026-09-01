@@ -931,10 +931,11 @@ if active_tab == "Canlı Denetim":
                     <div>&bull; <b style="color: #F59E0B;">4.0 - 6.9:</b> UYARI</div>
                     <div>&bull; <b style="color: #EF4444;">7.0 - 10.0:</b> KRİTİK</div>
                 </div>
-
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+
 
         # Floating Module 3: AI System Telemetry
         st.markdown(f"""
