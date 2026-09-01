@@ -927,10 +927,11 @@ if active_tab == "Canlı Denetim":
                     </div>
                 </div>
                 <div style="font-size: 0.68rem; color: #94A3B8; line-height: 1.4;">
-                    <div>&bull; <b style="color: #10B981;">0.0 - 4.9:</b> GÜVENLİ</div>
-                    <div>&bull; <b style="color: #F59E0B;">5.0 - 9.9:</b> UYARI</div>
-                    <div>&bull; <b style="color: #EF4444;">10.0+:</b> KRİTİK</div>
+                    <div>&bull; <b style="color: #10B981;">0.0 - 3.9:</b> GÜVENLİ</div>
+                    <div>&bull; <b style="color: #F59E0B;">4.0 - 6.9:</b> UYARI</div>
+                    <div>&bull; <b style="color: #EF4444;">7.0 - 10.0:</b> KRİTİK</div>
                 </div>
+
             </div>
         </div>
         """, unsafe_allow_html=True)
