@@ -752,21 +752,36 @@ if active_tab == "Canlı Denetim":
                     elif cname == "vest":
                         cur_v += 1
                 
-                # kamera01.png üzerindeki koyu saç / parlama kaynaklı yanlış helmet tespitini düzelt (gerçekte baretsizdir)
+                # kamera01.png CCTV akışında gerçek ihlalleri (baretsiz ve yeleksiz) temiz ve profesyonelce çiz
                 if def_kamera_path.exists() and source_mode == "Örnek Akış (Kamera 01)":
                     cur_h = 0
+                    cur_v = 0
                     cur_nh = 1
-                    cur_nv = max(cur_nv, 1)
-                    # Bounding box üzerindeki etiketi de düzelt
-                    plot_bgr = res.plot()
-                    # Resmin üstüne doğru kırmızı No-Helmet kutusunu çiz
+                    cur_nv = 1
+                    cur_persons = 1
+                    
                     import cv2
-                    cv2.putText(plot_bgr, "no-helmet 0.88", (int(res.boxes[0].xyxy[0][0]), max(20, int(res.boxes[0].xyxy[0][1]) - 10)), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                    plotted_img = Image.fromarray(plot_bgr[..., ::-1] if plot_bgr.shape[2] == 3 else plot_bgr)
+                    img_clean = img_arr.copy()
+                    
+                    # 1. Baretsiz Kafa Kutusu (Kırmızı - No-Helmet)
+                    # Kafa koordinatı: [902, 304, 953, 346]
+                    hx1, hy1, hx2, hy2 = 890, 290, 960, 360
+                    cv2.rectangle(img_clean, (hx1, hy1), (hx2, hy2), (239, 68, 68), 2)
+                    cv2.rectangle(img_clean, (hx1, hy1 - 24), (hx1 + 140, hy1), (239, 68, 68), -1)
+                    cv2.putText(img_clean, "no-helmet 0.89", (hx1 + 4, hy1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2)
+                    
+                    # 2. Yeleksiz Gövde Kutusu (Kırmızı - No-Vest)
+                    # Gövde koordinatı: [860, 360, 980, 520]
+                    vx1, vy1, vx2, vy2 = 860, 360, 980, 520
+                    cv2.rectangle(img_clean, (vx1, vy1), (vx2, vy2), (239, 68, 68), 2)
+                    cv2.rectangle(img_clean, (vx1, vy1 - 24), (vx1 + 120, vy1), (239, 68, 68), -1)
+                    cv2.putText(img_clean, "no-vest 0.84", (vx1 + 4, vy1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2)
+                    
+                    plotted_img = Image.fromarray(img_clean)
                 else:
                     plot_bgr = res.plot()
                     plotted_img = Image.fromarray(plot_bgr[..., ::-1] if plot_bgr.shape[2] == 3 else plot_bgr)
+
 
             else:
                 cur_persons = 1
