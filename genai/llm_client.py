@@ -4,38 +4,42 @@ import time
 MODEL_NAME = "qwen2.5:3b"
 SYSTEM_PROMPT = "Sen bir İş Sağlığı ve Güvenliği (İSG) uzmanısın. Yalnızca resmi kanun ve yönetmeliklere dayanarak profesyonel, eksiksiz ve tamamlanmış cümlelerle yanıtlar ver."
 
-def ask_llm(question: str) -> str:
+def ask_llm(question: str, max_tokens: int = 450) -> str:
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": question}
     ]
     options = {
-        "num_predict": 512,
+        "num_predict": max_tokens,
         "temperature": 0.15,
-        "num_ctx": 2048,
-        "top_k": 30,
-        "top_p": 0.9
+        "num_ctx": 1536,
+        "num_thread": 12,
+        "top_k": 20,
+        "top_p": 0.85
     }
     response = ollama.chat(model=MODEL_NAME, messages=messages, options=options)
     return response["message"]["content"]
 
-def stream_llm(question: str):
+def stream_llm(question: str, max_tokens: int = 250):
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": question}
     ]
     options = {
-        "num_predict": 512,
+        "num_predict": max_tokens,
         "temperature": 0.15,
-        "num_ctx": 2048,
-        "top_k": 30,
-        "top_p": 0.9
+        "num_ctx": 1024,
+        "num_thread": 12,
+        "top_k": 20,
+        "top_p": 0.85
     }
     response = ollama.chat(model=MODEL_NAME, messages=messages, stream=True, options=options)
     for chunk in response:
         content = chunk.get("message", {}).get("content", "")
         if content:
             yield content
+
+
 
 if __name__ == "__main__":
     sorular = [

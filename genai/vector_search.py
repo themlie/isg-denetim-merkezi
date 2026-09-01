@@ -17,12 +17,18 @@ chunks = None
 
 def load_store():
     global index, chunks
+    if index is not None and chunks is not None:
+        return True
     if FAISS_INDEX_PATH.exists() and CHUNKS_PATH.exists():
         index = faiss.read_index(str(FAISS_INDEX_PATH))
         with open(CHUNKS_PATH, "rb") as f:
             chunks = pickle.load(f)
         return True
     return False
+
+# Modül ilk yüklendiğinde hafızaya al
+load_store()
+
 
 def build_index():
     global index, chunks

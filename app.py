@@ -563,21 +563,36 @@ else:
     latest_risk = "NORMAL"
     latest_hazard = 3.5
 
-if "HIGH" in latest_risk:
-    risk_label = "KRİTİK"
-    risk_color = "#EF4444"
+# Canlı görsel analizi varsa en üst başlık anlık risk ile senkronize olsun
+if "active_live_hazard" in st.session_state and "active_live_risk_label" in st.session_state:
+    header_hazard = st.session_state["active_live_hazard"]
+    header_risk_label = st.session_state["active_live_risk_label"]
+    header_risk_color = st.session_state.get("active_live_risk_color", "#10B981")
+else:
+    header_hazard = latest_hazard
+    if "HIGH" in latest_risk:
+        header_risk_label = "KRİTİK"
+        header_risk_color = "#EF4444"
+    elif "MEDIUM" in latest_risk:
+        header_risk_label = "UYARI"
+        header_risk_color = "#F59E0B"
+    else:
+        header_risk_label = "NORMAL"
+        header_risk_color = "#10B981"
+
+risk_label = header_risk_label
+risk_color = header_risk_color
+
+if risk_label == "KRİTİK":
     risk_bg = "rgba(239, 68, 68, 0.15)"
     risk_border = "rgba(239, 68, 68, 0.4)"
-elif "MEDIUM" in latest_risk:
-    risk_label = "UYARI"
-    risk_color = "#F59E0B"
+elif risk_label == "UYARI":
     risk_bg = "rgba(245, 158, 11, 0.15)"
     risk_border = "rgba(245, 158, 11, 0.4)"
 else:
-    risk_label = "NORMAL"
-    risk_color = "#10B981"
     risk_bg = "rgba(16, 185, 129, 0.12)"
     risk_border = "rgba(16, 185, 129, 0.3)"
+
 
 # -----------------------------------------------------------------------------
 # 1. SLIM LEFT RAIL NAVIGATION (TÜRKÇE)
@@ -683,6 +698,8 @@ if active_tab == "Canlı Denetim":
             horizontal=True,
             label_visibility="collapsed"
         )
+        conf_threshold = 0.40
+
         
         input_image = None
         
@@ -714,7 +731,8 @@ if active_tab == "Canlı Denetim":
             img_arr = np.array(input_image)
             if yolo_model:
                 t0 = datetime.now()
-                res = yolo_model(img_arr, conf=0.25, verbose=False)[0]
+                res = yolo_model(img_arr, conf=conf_threshold, verbose=False)[0]
+
                 t_diff = (datetime.now() - t0).total_seconds() * 1000
                 inference_time_ms = max(round(t_diff, 1), 28.0)
                 
@@ -773,6 +791,14 @@ if active_tab == "Canlı Denetim":
                 live_risk_bg = "rgba(16, 185, 129, 0.12)"
                 live_risk_border = "rgba(16, 185, 129, 0.3)"
 
+            # Session state guncellemesi (en ust header ile anlik tam senkronizasyon)
+            if (st.session_state.get("active_live_hazard") != live_hazard or 
+                st.session_state.get("active_live_risk_label") != live_risk_label):
+                st.session_state["active_live_hazard"] = live_hazard
+                st.session_state["active_live_risk_label"] = live_risk_label
+                st.session_state["active_live_risk_color"] = live_risk_color
+                st.rerun()
+
             # Otomatik veritabanı kaydı (canlı çekim / yükleme)
             if db and source_mode in ["Kameradan Çek", "Fotoğraf Yükle"]:
                 shot_sig = f"{source_mode}_{cur_nh}_{cur_nv}_{cur_h}_{cur_v}_{img_arr.shape}"
@@ -782,11 +808,19 @@ if active_tab == "Canlı Denetim":
                     db.add_log(tag_fac, cur_nh, cur_nv, live_hazard, "High" if live_risk_label == "KRİTİK" else ("Medium" if live_risk_label == "UYARI" else "Low"))
                     all_logs = db.fetch_logs()
         else:
+            if "active_live_hazard" in st.session_state:
+                del st.session_state["active_live_hazard"]
+                del st.session_state["active_live_risk_label"]
+                if "active_live_risk_color" in st.session_state:
+                    del st.session_state["active_live_risk_color"]
+                st.rerun()
+
             live_hazard = latest_hazard
             live_risk_label = risk_label
             live_risk_color = risk_color
             live_risk_bg = risk_bg
             live_risk_border = risk_border
+
 
         # Viewport with Futuristic HUD Overlays
         if source_mode != "Kameradan Çek" or (source_mode == "Kameradan Çek" and plotted_img is not None):
@@ -1105,12 +1139,20 @@ elif active_tab == "Denetim Raporları":
                     "Genel Tesis Risk Durumu": durum
                 }
                 
-                prompt = f"""Aşağıdaki günlük tesis ihlal verilerini inceleyerek fabrika müdürü için 3 paragraflık resmi bir İSG Denetim Özet Raporu ve aksiyon planı hazırla. Raporun dili son derece profesyonel ve kurumsal olmalıdır.
+                prompt = f"""Aşağıdaki tesis ihlal verilerini inceleyerek fabrika yönetimi için resmi bir İSG Denetim Özeti ve 2 maddelik DÖF (Düzeltici Önleyici Faaliyet) Aksiyon Planı hazırla.
                 
 VERİLER:
 {json.dumps(ozet, indent=2, ensure_ascii=False)}
+
+GÖREV:
+- 1. Paragraf: Genel tesis risk durumunu ve ihlal istatistiklerini (baret/yelek sayıları) kurumsal bir dille özetle.
+- 2. Paragraf: Risk skorunun İSG standartları açısından değerlendirmesini yap.
+- Aksiyon Planı: Yalnızca 2 kısa, net ve uygulanabilir aksiyon maddesi yaz (Örn: 1. KKD Denetim Sıklığının Artırılması, 2. Sahada Farkındalık Eğitimi).
+- Cümleleri tam olarak bitir.
 """
-                rapor_icerigi = ask_llm(prompt)
+                rapor_icerigi = ask_llm(prompt, max_tokens=600)
+
+
                 
                 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
                 tarih_str = datetime.now().strftime("%Y_%m_%d")
@@ -1270,12 +1312,24 @@ with st.popover("Mevzuat Asistanı", icon=":material/smart_toy:", use_container_
             <div style="font-weight: 800; font-size: 0.88rem; color: #F8FAFC;">İSG Mevzuat Asistanı</div>
             <div style="font-size: 0.68rem; color: #64748B;">6331 Sayılı Kanun & Yapı İşleri Yönetmeliği</div>
         </div>
-        <div style="font-size: 0.65rem; color: #38BDF8; font-weight: 700; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 3px; border: 1px solid rgba(56, 189, 248, 0.3);">
-            Qwen 2.5 • FAISS
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <div style="font-size: 0.65rem; color: #38BDF8; font-weight: 700; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 3px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                Qwen 2.5 • FAISS
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
+    if st.button("Sohbeti Sıfırla / Temizle", key="clear_chat_btn", use_container_width=True):
+        st.session_state.rag_messages = [
+            {
+                "role": "assistant",
+                "content": "Merhaba! 6331 sayılı İSG Kanunu ve Yapı İşleri Yönetmeliği ile ilgili sorularınızı yanıtlayabilirim.",
+                "sources": []
+            }
+        ]
+        st.rerun()
+
     if "rag_messages" not in st.session_state:
         st.session_state.rag_messages = [
             {
@@ -1288,6 +1342,7 @@ with st.popover("Mevzuat Asistanı", icon=":material/smart_toy:", use_container_
     # Quick prompt buttons (compact)
     st.markdown("<div style='font-size: 0.68rem; color: #64748B; margin-bottom: 4px; font-weight: 600;'>HIZLI SORULAR:</div>", unsafe_allow_html=True)
     q_c1, q_c2 = st.columns(2)
+
     quick_q = None
     with q_c1:
         if st.button("Yüksekte çalışma bareti", key="pop_q1", use_container_width=True):
@@ -1321,11 +1376,6 @@ with st.popover("Mevzuat Asistanı", icon=":material/smart_toy:", use_container_
                 
             with st.chat_message("assistant"):
                 try:
-                    import importlib
-                    import genai.llm_client
-                    import genai.rag_chain
-                    importlib.reload(genai.llm_client)
-                    importlib.reload(genai.rag_chain)
                     from genai.rag_chain import stream_mevzuat_with_sources
                     token_stream, ans_sources = stream_mevzuat_with_sources(active_prompt)
                     ans_text = st.write_stream(token_stream)
@@ -1333,6 +1383,7 @@ with st.popover("Mevzuat Asistanı", icon=":material/smart_toy:", use_container_
                     ans_text = f"RAG sorgulama hatası: {e}"
                     ans_sources = []
                     st.markdown(ans_text)
+
                     
                 if ans_sources:
                     src_html = " ".join([

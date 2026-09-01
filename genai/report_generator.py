@@ -48,14 +48,22 @@ def generate_daily_report():
     print("-" * 50)
     
     # 3. LLM Promptunu Hazırla
-    prompt = f"""Aşağıdaki günlük tesis ihlal verilerini inceleyerek fabrika müdürü için 3 paragraflık resmi bir İSG Denetim Özet Raporu ve aksiyon planı hazırla. Raporun dili son derece profesyonel ve kurumsal olmalıdır.
+    prompt = f"""Aşağıdaki tesis ihlal verilerini inceleyerek fabrika yönetimi için resmi bir İSG Denetim Özeti ve 2 maddelik DÖF (Düzeltici Önleyici Faaliyet) Aksiyon Planı hazırla.
     
     VERİLER:
     {json.dumps(ozet_veri, indent=2, ensure_ascii=False)}
+
+    GÖREV:
+    - 1. Paragraf: Genel tesis risk durumunu ve ihlal istatistiklerini (baret/yelek sayıları) kurumsal bir dille özetle.
+    - 2. Paragraf: Risk skorunun İSG standartları açısından değerlendirmesini yap.
+    - Aksiyon Planı: Yalnızca 2 kısa, net ve uygulanabilir aksiyon maddesi yaz.
+    - Cümleleri tam olarak bitir.
     """
     
     print("LLM raporu üretiyor, lütfen bekleyin...")
-    rapor_metni = ask_llm(prompt)
+    rapor_metni = ask_llm(prompt, max_tokens=600)
+
+
     
     # 4. Raporu diske kaydet
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)

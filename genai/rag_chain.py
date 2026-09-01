@@ -2,11 +2,36 @@ import textwrap
 from genai.vector_search import search
 from genai.llm_client import ask_llm, stream_llm
 
+import re
+
 def get_rag_context_and_prompt(question: str):
-    results = search(question, k=3)
+    q_clean = question.strip()
+    q_lower = q_clean.lower()
     
-    if not results:
-        return None, [], "Bu bilgi mevzuat dokümanlarında yer almamaktadır."
+    # Kapsam dışı doğrudan tetikleyiciler (yemek, eğlence, günlük sohbet vs.)
+    out_of_scope_patterns = [
+        r"\b(menemen|yemek|kahvaltı|akşam yemeği|tatlı|çay|kahve|pizza|hamburger|çorba)\b",
+        r"\b(hava durumu|yağmur yağacak mı|yarın hava|sıcaklık)\b",
+        r"\b(futbol|maç|fenerbahçe|galatasaray|beşiktaş|şampiyon)\b",
+        r"\b(nasılsın|naber|kimsin|sen kimsin|günaydın|iyi akşamlar|espri|fıkra)\b"
+    ]
+    for pattern in out_of_scope_patterns:
+        if re.search(pattern, q_lower):
+            fallback_msg = "Bu soru 6331 sayılı İSG Kanunu ve Yapı İşleri Yönetmeliği kapsamı dışındadır. Lütfen iş sağlığı, güvenliği, KKD standartları veya saha mevzuatı ile ilgili bir soru yöneltiniz."
+            return None, [], fallback_msg
+
+    # İSG Konusu Kontrolü (Tam kelime eşleşmesi)
+    isg_pattern = r"\b(isg|iş sağlığı|iş güvenliği|güvenlik|baret|yelek|kkd|şantiye|inşaat|iskele|yüksekte çalışma|iş kazası|ceza|kanun|yönetmelik|koruyucu donanım|tehlike|risk|işveren|çalışan|eldiven|gözlük|emniyet kemeri|yangın|denetim|mevzuat)\b"
+    if not re.search(isg_pattern, q_lower):
+        fallback_msg = "Bu soru 6331 sayılı İSG Kanunu ve Yapı İşleri Yönetmeliği kapsamı dışındadır. Lütfen iş sağlığı, güvenliği, KKD standartları veya saha mevzuatı ile ilgili bir soru yöneltiniz."
+        return None, [], fallback_msg
+    
+    results = search(question, k=3)
+    top_score = results[0]["distance"] if results else 0.0
+    if not results or top_score < 0.60:
+        fallback_msg = "Bu soru 6331 sayılı İSG Kanunu ve Yapı İşleri Yönetmeliği kapsamı dışındadır. Lütfen iş sağlığı, güvenliği, KKD standartları veya saha mevzuatı ile ilgili bir soru yöneltiniz."
+        return None, [], fallback_msg
+
         
     baglam_metinleri = []
     sources = []
@@ -15,26 +40,25 @@ def get_rag_context_and_prompt(question: str):
         kaynak = doc.metadata.get("source", "6331 Sayılı Kanun")
         sayfa = doc.metadata.get("page", "1")
         sources.append({"source": kaynak, "page": sayfa, "score": res.get("distance", 0.0)})
-        baglam_metinleri.append(f"[{kaynak} - Sayfa {sayfa}]:\n{doc.page_content.strip()}")
+        content_preview = doc.page_content.strip()
+        baglam_metinleri.append(f"[{kaynak} - Madde/Sayfa {sayfa}]:\n{content_preview}")
         
     baglam = "\n\n".join(baglam_metinleri)
     
-    rag_prompt = f"""Aşağıdaki resmi İSG mevzuat maddelerini ve bağlamı inceleyerek soruyu yanıtla.
+    rag_prompt = f"""Sen 6331 Sayılı İş Sağlığı ve Güvenliği Kanunu ve Yapı İşleri Yönetmeliği uzmanısın. Aşağıdaki resmi mevzuat maddelerine dayanarak soruyu net, doğru ve kurumsal bir dille 2-3 cümlede yanıtla.
 
-BAĞLAM:
+RESMİ MEVZUAT METİNLERİ:
 {baglam}
 
 SORU:
 {question}
 
-GÖREV:
-- Yukarıdaki mevzuat bağlamına dayanarak soruyu net, doğru ve kurumsal bir dille 2-3 cümlede yanıtla.
-- Cümlelerini daima tam ve eksiksiz olarak bitir.
-- İşverenin ve çalışanların yasal sorumluluklarını veya KKD zorunluluklarını açıkça belirt.
-- Eğer konu mevzuatla tamamen alakasızsa (örneğin hava durumu, yemek tarifi vb.), "Bu bilgi mevzuat dokümanlarında yer almamaktadır." şeklinde belirt.
-
 CEVAP:"""
     return rag_prompt, sources, None
+
+
+
+
 
 def ask_mevzuat_with_sources(question: str):
     prompt, sources, fallback = get_rag_context_and_prompt(question)
